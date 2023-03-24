@@ -1,7 +1,6 @@
-use std::collections::VecDeque;
 use std::io::{stdout, Write};
-use std::sync::{Condvar, Mutex};
-use std::sync::atomic::{AtomicBool, AtomicUsize};
+use std::sync::{Mutex};
+use std::sync::atomic::{AtomicUsize};
 use std::sync::atomic::Ordering::Relaxed;
 use std::thread;
 use std::time::Duration;
@@ -33,7 +32,7 @@ fn main() {
     println!("\nDone");
 }
 
-fn process_item(i: usize) {
+fn process_item(_i: usize) {
     let wait = rand::random::<u8>();
 
     thread::sleep(Duration::from_millis(wait as u64));
