@@ -1,5 +1,4 @@
 use std::io::{stdout, Write};
-use std::sync::{Mutex};
 use std::sync::atomic::{AtomicUsize};
 use std::sync::atomic::Ordering::Relaxed;
 use std::thread;
@@ -7,6 +6,7 @@ use std::time::Duration;
 
 fn main() {
     let num_done = AtomicUsize::new(0);
+    let main_thread = thread::current();
 
     // takes care of joining all the threads
     thread::scope(|s| {
@@ -16,6 +16,7 @@ fn main() {
             for i in 0..100 {
                 process_item(i);
                 num_done.store(i + 1, Relaxed);
+                main_thread.unpark();
             }
         });
 
@@ -25,7 +26,7 @@ fn main() {
             stdout().flush().unwrap();
             if n == 100 { break; }
 
-            thread::sleep(Duration::from_millis(100));
+            thread::park_timeout(Duration::from_secs(1));
         }
     });
 
