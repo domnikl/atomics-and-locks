@@ -1,0 +1,57 @@
+[package]
+name = "threads-in-rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand = "0.8.5"
+
+[[bin]]
+name = "basic-threads"
+path = "src/01-basic-threads.rs"
+
+[[bin]]
+name = "threads-with-closures"
+path = "src/02-threads-with-closures.rs"
+
+[[bin]]
+name = "scoped-threads"
+path = "src/03-scoped-threads.rs"
+
+[[bin]]
+name = "reference-counting"
+path = "src/04-reference-counting.rs"
+
+[[bin]]
+name = "mutex"
+path = "src/05-mutex.rs"
+
+[[bin]]
+name = "thread-parking"
+path = "src/06-thread-parking.rs"
+
+[[bin]]
+name = "condition-variables"
+path = "src/07-condition-variables.rs"
+
+[[bin]]
+name = "stop-flags"
+path = "src/08-stop-flags.rs"
+
+[[bin]]
+name = "progress-reporting"
+path = "src/09-progress-reporting.rs"
+
+[[bin]]
+name = "lazy-initialization"
+path = "src/10-lazy-intialization.rs"
+
+[[bin]]
+name = "progress-reporting-multiple-threads"
+path = "src/11-progress-reporting-multiple-threads.rs"
+
+[[bin]]
+name = "thread_pool"
+path = "src/12-thread_pool.rs"

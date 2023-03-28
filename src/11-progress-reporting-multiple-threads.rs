@@ -1,6 +1,5 @@
-use std::io::{stdout, Write};
-use std::sync::atomic::{AtomicU64, AtomicUsize};
 use std::sync::atomic::Ordering::Relaxed;
+use std::sync::atomic::{AtomicU64, AtomicUsize};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -17,7 +16,6 @@ fn main() {
                     process_item(t * 25 + i);
                     let time_taken = start.elapsed().as_micros() as u64;
 
-
                     num_done.fetch_add(1, Relaxed);
                     total_time.fetch_add(time_taken, Relaxed);
                     max_time.fetch_max(time_taken, Relaxed);
@@ -33,11 +31,17 @@ fn main() {
             if n == 0 {
                 println!("Working ... nothing done yet.");
             } else {
-                println!("Working ... {n}/100, {:?} average, {:?} peak", total_time / n as u32, max_time);
+                println!(
+                    "Working ... {n}/100, {:?} average, {:?} peak",
+                    total_time / n as u32,
+                    max_time
+                );
             }
 
             thread::sleep(Duration::from_secs(1));
-            if n == 100 { break; }
+            if n == 100 {
+                break;
+            }
         }
     });
 
