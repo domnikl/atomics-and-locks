@@ -1,14 +1,18 @@
 use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::AtomicU8;
 use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
 use std::thread;
+
+const EMPTY: u8 = 0;
+const WRITING: u8 = 1;
+const READY: u8 = 2;
+const READING: u8 = 2;
 
 // Mutex and Condvar can be shared between threads, so can Channel<T>
 pub struct Channel<T> {
     message: UnsafeCell<MaybeUninit<T>>,
-    ready: AtomicBool,
-    in_use: AtomicBool,
+    state: AtomicU8,
 }
 
 // as long as T is Send, Channel may be shared between threads safely
@@ -18,13 +22,16 @@ impl<T> Channel<T> {
     pub const fn new() -> Self {
         Self {
             message: UnsafeCell::new(MaybeUninit::uninit()),
-            ready: AtomicBool::new(false),
-            in_use: AtomicBool::new(false),
+            state: AtomicU8::new(EMPTY),
         }
     }
 
     pub fn send(&self, message: T) {
-        if self.in_use.swap(true, Relaxed) {
+        if self
+            .state
+            .compare_exchange(EMPTY, WRITING, Relaxed, Relaxed)
+            .is_err()
+        {
             panic!("Can't send more than one message!");
         }
 
@@ -32,11 +39,11 @@ impl<T> Channel<T> {
             (*self.message.get()).write(message);
         }
 
-        self.ready.store(true, Release);
+        self.state.store(READY, Release);
     }
 
     pub fn is_ready(&self) -> bool {
-        self.ready.load(Relaxed)
+        self.state.load(Relaxed) == READY
     }
 
     /// Panics if no message is available yet
@@ -45,7 +52,11 @@ impl<T> Channel<T> {
     ///
     /// Safety: Only call this once!
     pub fn receive(&self) -> T {
-        if !self.ready.swap(false, Acquire) {
+        if self
+            .state
+            .compare_exchange(READY, READING, Acquire, Relaxed)
+            .is_err()
+        {
             panic!("no message available!");
         }
 
@@ -55,7 +66,7 @@ impl<T> Channel<T> {
 
 impl<T> Drop for Channel<T> {
     fn drop(&mut self) {
-        if *self.ready.get_mut() {
+        if *self.state.get_mut() == READY {
             unsafe { self.message.get_mut().assume_init_drop() }
         }
     }
