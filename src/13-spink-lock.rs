@@ -44,7 +44,7 @@ impl<T> Deref for Guard<'_, T> {
 
 impl<T> DerefMut for Guard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.lock.value.get() }
+        unsafe { &mut *self.lock.value.get() } 
     }
 }
 
@@ -67,7 +67,8 @@ fn main() {
     });
 
     let mut g = x.lock();
-
+    
+    // thanks to Deref and DerefMut, this is directly callable on the Guard
     g.sort();
 
     assert!(g.as_slice() == [1, 2, 3]);

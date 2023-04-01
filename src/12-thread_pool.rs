@@ -1,7 +1,7 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::thread::{JoinHandle};
+use std::thread::JoinHandle;
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
@@ -81,7 +81,7 @@ impl Worker {
 }
 
 fn main() {
-    let pool = ThreadPool::new(4);
+    let pool = ThreadPool::new(10);
 
     for i in 0..100000 {
         pool.execute(move || println!("Hello from thread {:?}, job {i}", thread::current().id()));
