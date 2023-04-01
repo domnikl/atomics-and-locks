@@ -1,13 +1,14 @@
-use std::sync::atomic::AtomicBool;
-use std::thread;
-use std::time::Duration;
 use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
+use std::thread;
 
 // Mutex and Condvar can be shared between threads, so can Channel<T>
 pub struct Channel<T> {
     message: UnsafeCell<MaybeUninit<T>>,
     ready: AtomicBool,
+    in_use: AtomicBool,
 }
 
 // as long as T is Send, Channel may be shared between threads safely
@@ -18,53 +19,62 @@ impl<T> Channel<T> {
         Self {
             message: UnsafeCell::new(MaybeUninit::uninit()),
             ready: AtomicBool::new(false),
+            in_use: AtomicBool::new(false),
         }
     }
 
-    pub unsafe fn send(&self, message: T) {
-        (*self.message.get()).write(message);
-        self.ready.store(true, std::sync::atomic::Ordering::Release);
+    pub fn send(&self, message: T) {
+        if self.in_use.swap(true, Relaxed) {
+            panic!("Can't send more than one message!");
+        }
+
+        unsafe {
+            (*self.message.get()).write(message);
+        }
+
+        self.ready.store(true, Release);
     }
 
     pub fn is_ready(&self) -> bool {
-        self.ready.load(std::sync::atomic::Ordering::Acquire)
+        self.ready.load(Relaxed)
     }
 
-    pub unsafe fn receive(&self) -> T {
-        (*self.message.get()).assume_init_read()
-    } 
+    /// Panics if no message is available yet
+    ///
+    /// Tip: Use `is_ready` to check first.
+    ///
+    /// Safety: Only call this once!
+    pub fn receive(&self) -> T {
+        if !self.ready.swap(false, Acquire) {
+            panic!("no message available!");
+        }
+
+        unsafe { (*self.message.get()).assume_init_read() }
+    }
 }
 
-#[derive(Debug)]
-enum Message {
-    NewMessage(String),
+impl<T> Drop for Channel<T> {
+    fn drop(&mut self) {
+        if *self.ready.get_mut() {
+            unsafe { self.message.get_mut().assume_init_drop() }
+        }
+    }
 }
 
 fn main() {
-    let channel: Channel<Message> = Channel::new();
+    let channel = Channel::new();
+    let t = thread::current();
 
     thread::scope(|s| {
         s.spawn(|| {
-            let x = &channel;
-
-            println!("Waiting for new message to process ...");
-
-            if x.is_ready() {
-                unsafe {
-                    let message = x.receive();
-                    println!("{:?}", message);
-                }
-            }
+            channel.send("hello world!");
+            t.unpark();
         });
 
-        s.spawn(|| {
-            let x = &channel;
+        while !channel.is_ready() {
+            thread::park();
+        }
 
-            println!("Sending messages in 3 secs ...");
-            thread::sleep(Duration::from_secs(3));
-            unsafe {
-                x.send(Message::NewMessage("Hello World".to_string()));
-            }
-        });
+        assert_eq!(channel.receive(), "hello world!");
     });
 }
