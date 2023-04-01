@@ -8,20 +8,18 @@ fn main() {
     let not_empty = Condvar::new();
 
     thread::scope(|s| {
-        s.spawn(|| {
-            loop {
-                let mut q = queue.lock().unwrap();
-                let item = loop {
-                    if let Some(item) = q.pop_front() {
-                        break item;
-                    } else {
-                        q = not_empty.wait(q).unwrap();
-                    }
-                };
+        s.spawn(|| loop {
+            let mut q = queue.lock().unwrap();
+            let item = loop {
+                if let Some(item) = q.pop_front() {
+                    break item;
+                } else {
+                    q = not_empty.wait(q).unwrap();
+                }
+            };
 
-                drop(q);
-                dbg!(item);
-            }
+            drop(q);
+            dbg!(item);
         });
 
         for i in 0.. {

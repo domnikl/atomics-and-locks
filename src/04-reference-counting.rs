@@ -11,7 +11,6 @@ fn main() {
     // thread::spawn(move || dbg!(b)); // ERROR: cannot be sent between threads safely!
 
     let c = Arc::new([1, 2, 3]);
-    let d = c.clone();
 
-    thread::spawn(move || dbg!(d)).join().unwrap();
+    thread::spawn(move || dbg!(c)).join().unwrap();
 }

@@ -1,5 +1,5 @@
 use std::io::{stdout, Write};
-use std::sync::atomic::{AtomicUsize};
+use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::Relaxed;
 use std::thread;
 use std::time::Duration;
@@ -24,7 +24,9 @@ fn main() {
             let n = num_done.load(Relaxed);
             print!("\rWorking ... {n}/100 done");
             stdout().flush().unwrap();
-            if n == 100 { break; }
+            if n == 100 {
+                break;
+            }
 
             thread::park_timeout(Duration::from_secs(1));
         }

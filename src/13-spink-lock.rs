@@ -11,7 +11,10 @@ pub struct SpinLock<T> {
 
 impl<T> SpinLock<T> {
     pub const fn new(value: T) -> Self {
-        Self { locked: AtomicBool::new(false), value: UnsafeCell::new(value) }
+        Self {
+            locked: AtomicBool::new(false),
+            value: UnsafeCell::new(value),
+        }
     }
 
     pub fn lock<'a>(&'a self) -> Guard<T> {
@@ -29,7 +32,7 @@ impl<T> SpinLock<T> {
 unsafe impl<T> Sync for SpinLock<T> where T: Send {}
 
 pub struct Guard<'a, T> {
-    lock: &'a SpinLock<T>
+    lock: &'a SpinLock<T>,
 }
 
 impl<T> Deref for Guard<'_, T> {
@@ -44,7 +47,7 @@ impl<T> Deref for Guard<'_, T> {
 
 impl<T> DerefMut for Guard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.lock.value.get() } 
+        unsafe { &mut *self.lock.value.get() }
     }
 }
 
@@ -67,7 +70,7 @@ fn main() {
     });
 
     let mut g = x.lock();
-    
+
     // thanks to Deref and DerefMut, this is directly callable on the Guard
     g.sort();
 

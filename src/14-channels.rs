@@ -1,7 +1,7 @@
+use std::collections::VecDeque;
+use std::sync::Condvar;
 use std::sync::Mutex;
 use std::thread;
-use std::sync::Condvar;
-use std::collections::VecDeque;
 use std::time::Duration;
 
 // Mutex and Condvar can be shared between threads, so can Channel<T>
@@ -43,7 +43,6 @@ enum Message {
     Terminate,
 }
 
-
 fn main() {
     let channel: Channel<Message> = Channel::new();
 
@@ -57,7 +56,7 @@ fn main() {
                     Message::NewMessage(message) => println!("{}", message),
                     Message::Terminate => break,
                 };
-            };
+            }
         });
 
         s.spawn(|| {
@@ -70,4 +69,3 @@ fn main() {
         });
     });
 }
-

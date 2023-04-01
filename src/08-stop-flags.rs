@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-use std::sync::{Condvar, Mutex};
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::Relaxed;
 use std::thread;
