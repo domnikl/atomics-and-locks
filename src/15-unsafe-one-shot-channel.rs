@@ -2,7 +2,6 @@ use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
 use std::sync::atomic::AtomicU8;
 use std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
-use std::sync::Arc;
 use std::thread;
 
 const EMPTY: u8 = 0;
@@ -10,11 +9,11 @@ const WRITING: u8 = 1;
 const READY: u8 = 2;
 const READING: u8 = 2;
 
-pub struct Sender<T> {
-    channel: Arc<Channel<T>>,
+pub struct Sender<'a, T> {
+    channel: &'a Channel<T>,
 }
 
-impl<T> Sender<T> {
+impl<T> Sender<'_, T> {
     pub fn send(self, message: T) {
         if self
             .channel
@@ -30,11 +29,11 @@ impl<T> Sender<T> {
     }
 }
 
-pub struct Receiver<T> {
-    channel: Arc<Channel<T>>,
+pub struct Receiver<'a, T> {
+    channel: &'a Channel<T>,
 }
 
-impl<T> Receiver<T> {
+impl<T> Receiver<'_, T> {
     pub fn is_ready(&self) -> bool {
         self.channel.state.load(Relaxed) == READY
     }
@@ -54,7 +53,7 @@ impl<T> Receiver<T> {
 }
 
 // Mutex and Condvar can be shared between threads, so can Channel<T>
-struct Channel<T> {
+pub struct Channel<T> {
     message: UnsafeCell<MaybeUninit<T>>,
     state: AtomicU8,
 }
@@ -62,12 +61,18 @@ struct Channel<T> {
 // as long as T is Send, Channel may be shared between threads safely
 unsafe impl<T> Sync for Channel<T> where T: Send {}
 
-pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
-    let a = Arc::new(Channel {
-        message: UnsafeCell::new(MaybeUninit::uninit()),
-        state: AtomicU8::new(EMPTY),
-    });
-    (Sender { channel: a.clone() }, Receiver { channel: a })
+impl<T> Channel<T> {
+    pub const fn new() -> Self {
+        Self {
+            message: UnsafeCell::new(MaybeUninit::uninit()),
+            state: AtomicU8::new(EMPTY),
+        }
+    }
+
+    pub fn split(&mut self) -> (Sender<T>, Receiver<T>) {
+        *self = Self::new();
+        (Sender { channel: self }, Receiver { channel: self })
+    }
 }
 
 impl<T> Drop for Channel<T> {
@@ -79,11 +84,13 @@ impl<T> Drop for Channel<T> {
 }
 
 fn main() {
-    let (sender, receiver) = channel();
-    let t = thread::current();
+    let mut channel = Channel::new();
 
     thread::scope(|s| {
-        s.spawn(|| {
+        let (sender, receiver) = channel.split();
+        let t = thread::current();
+
+        s.spawn(move || {
             sender.send("hello world!");
             t.unpark();
         });
