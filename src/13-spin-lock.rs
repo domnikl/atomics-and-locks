@@ -74,5 +74,5 @@ fn main() {
     // thanks to Deref and DerefMut, this is directly callable on the Guard
     g.sort();
 
-    assert!(g.as_slice() == [1, 2, 3]);
+    assert_eq!(g.as_slice(), [1, 2, 3]);
 }

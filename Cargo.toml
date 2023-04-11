@@ -58,7 +58,7 @@ path = "src/12-thread_pool.rs"
 
 [[bin]]
 name = "spin-lock"
-path = "src/13-spink-lock.rs"
+path = "src/13-spin-lock.rs"
 
 [[bin]]
 name = "channels"
@@ -68,3 +68,6 @@ path = "src/14-channels.rs"
 name = "unsafe-one-shot-channel"
 path = "src/15-unsafe-one-shot-channel.rs"
 
+[[bin]]
+name = "arc"
+path = "src/16-arc.rs"

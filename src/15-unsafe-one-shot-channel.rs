@@ -35,14 +35,19 @@ impl<T> Sender<'_, T> {
 pub struct Receiver<'a, T> {
     channel: &'a Channel<T>,
     _no_send: PhantomData<*const ()>, // disallow sending the Receiver between threads, `*const ()`
-    // is a raw pointer, that does not implement Send
+                                      // is a raw pointer, that does not implement Send
 }
 
 impl<T> Receiver<'_, T> {
-   pub fn receive(self) -> T {
+    pub fn receive(self) -> T {
         // thread::park() might return spuriously, so the loop needs to be there to check if we
         // still need to block
-        while self.channel.state.compare_exchange(READY, READING, Acquire, Relaxed).is_err()  {
+        while self
+            .channel
+            .state
+            .compare_exchange(READY, READING, Acquire, Relaxed)
+            .is_err()
+        {
             thread::park();
         }
 
@@ -69,7 +74,16 @@ impl<T> Channel<T> {
 
     pub fn split(&mut self) -> (Sender<T>, Receiver<T>) {
         *self = Self::new();
-        (Sender { channel: self, receiving_thread: thread::current() }, Receiver { channel: self, _no_send: PhantomData })
+        (
+            Sender {
+                channel: self,
+                receiving_thread: thread::current(),
+            },
+            Receiver {
+                channel: self,
+                _no_send: PhantomData,
+            },
+        )
     }
 }
 
