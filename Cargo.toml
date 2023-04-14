@@ -71,3 +71,7 @@ path = "src/15-unsafe-one-shot-channel.rs"
 [[bin]]
 name = "arc"
 path = "src/16-arc.rs"
+
+[[bin]]
+name = "built-in-arc"
+path = "src/17-built-in-arc.rs"
