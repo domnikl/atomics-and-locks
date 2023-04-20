@@ -75,3 +75,7 @@ path = "src/16-arc.rs"
 [[bin]]
 name = "built-in-arc"
 path = "src/17-built-in-arc.rs"
+
+[[bin]]
+name = "memory-ordering"
+path = "src/18-memory-ordering.rs"
