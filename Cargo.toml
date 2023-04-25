@@ -7,6 +7,9 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.5"
+hello_macro = { path = "hello_macro" }
+hello_macro_derive = { path = "hello_macro_derive" }
+atomic-wait = "1.1.0"
 
 [[bin]]
 name = "basic-threads"
@@ -79,3 +82,15 @@ path = "src/17-built-in-arc.rs"
 [[bin]]
 name = "memory-ordering"
 path = "src/18-memory-ordering.rs"
+
+[[bin]]
+name = "declarative_macros"
+path = "src/declarative_macros.rs"
+
+[[bin]]
+name = "procedural_macros"
+path = "src/procedural_macros.rs"
+
+[[bin]]
+name = "own_mutex"
+path = "src/19-mutex.rs"
