@@ -1,3 +1,3 @@
 # Rust Atomics and Locks
 
-Example code from the Rust Atomics and Locks book
+Example code from Mara Bos' Rust Atomics and Locks book
